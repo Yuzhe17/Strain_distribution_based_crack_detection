@@ -1,0 +1,64 @@
+import numpy as np
+import matplotlib.pyplot as plt
+strain_crack=np.load('./strain_crack.npy')
+strain_pris=np.load('./strain_no_crack.npy')
+
+plt.figure()
+for i in range(20):
+    plt.plot(strain_crack[-1-i])
+
+plt.figure()
+plt.ylim(-500,-50)
+for i in range(5):
+    plt.plot(strain_pris[100+i],)
+
+strain_x=np.vstack([strain_crack,strain_pris])
+label_y=np.vstack([label_crack,label_pris])
+df=pd.DataFrame(data=strain_x)
+
+#feature engineering
+maxabs=lambda x: abs(max(x.max(),x.min(),key=abs))
+#df_new['min/max']=df_new.min(axis=1)/df_new.max(axis=1)#ratio of max and min
+#df_new['min/mean']=df_new.min(axis=1)/df_new.mean(axis=1)
+df['min/mean']=df.apply(maxabs,axis=1)/df.mean(axis=1)
+#df_new['ration_tp']=df_new['707.3535']/df_new['680.5746']
+#df_new['var1']=(df_new['707.3535']-df_new['680.5746'])/df_new.mean(axis=1)
+#df_new['var2']=df_new['707.3535'].abs()/df_new.mean(axis=1)
+df['std/mean']=df.std(axis=1)/df.mean(axis=1)#normalized standard deviation
+#df_new['var1']=df_new.std(axis=1)/df_new.iloc[:,2]
+df['kur']=df.kurtosis(axis=1)#kurtosis of the distribution
+#quartile coefficient of dispersion
+df['qcde']=(df.quantile(0.75,axis=1)-df.quantile(0.25,axis=1))/(df.quantile(0.75,axis=1)+df.quantile(0.25,axis=1))
+#data_new['status']=data_y
+
+from sklearn.utils import shuffle
+from sklearn.model_selection import train_test_split
+x_train_raw_scale,label_y=shuffle(x_train_raw_scale,label_y)
+#x_train,x_val,y_train,y_val=train_test_split(strain_x_new,label_y,test_size=0.1,stratify=label_y)
+x_train1,x_val1,y_train1,y_val1=train_test_split(x_train_raw_scale,label_y,test_size=0.1,stratify=label_y)
+
+from sklearn.tree import DecisionTreeClassifier
+dt=DecisionTreeClassifier(splitter='random')
+dt.fit(x_train1,y_train1)
+dt.evaluate(x_val1,y_val1)
+
+from sklearn.linear_model import LogisticRegression
+y_train1=np.reshape(y_train1,(-1))
+lr=LogisticRegression()
+lr.fit(x_train1,y_train1)
+lr.evaluate(x_val1,y_val1)
+
+import tensorflow as tf
+from tensorflow.keras.layers import Input, Dense
+from tensorflow.keras import Model
+inp=Input(shape=(58,))
+x=Dense(24,activation='relu')(inp)
+x=Dense(12,activation='relu')(x)
+out=Dense(1,activation='sigmoid')(x)
+model=Model(inputs=inp,outputs=out)
+model.summary()
+
+from tensorflow.keras.optimizers import Adam
+adam=Adam(learning_rate=0.0001)
+model.compile(loss='binary_crossentropy',optimizer=adam,metrics='accuracy')
+model.fit(x_train1,y_train1,batch_size=32,epochs=50,validation_data=(x_val1,y_val1))
