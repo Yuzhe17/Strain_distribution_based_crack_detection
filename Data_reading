@@ -1,0 +1,20 @@
+import pandas as pd
+import numpy as np
+def csv_to_array(url,nrows=None):
+    df=pd.read_csv(url,sep='\t',nrows=nrows,skiprows=4)
+    df.drop(columns=df.columns[0],inplace=True)
+    return df.values[:,572:630]
+st_2mm_2KN=csv_to_array(r'D:\yuzhe\exp(09.09.20)\2mm\2KN\4686.txt',20)
+st_2mm_4KN=csv_to_array(r'D:\yuzhe\exp(09.09.20)\2mm\4KN\6257.txt',20)
+st_2mm_8KN=csv_to_array(r'D:\yuzhe\exp(09.09.20)\2mm\8KN\3366.txt',20)
+st_4mm=csv_to_array(r'D:\yuzhe\exp(09.09.20)\4mm\0.6KN-8KN(SIN)\2541.txt')
+st_6mm=csv_to_array(r'D:\yuzhe\exp(09.09.20)\6mm\0.6-8KN(SIN)\3110.txt')
+st_8mm=csv_to_array(r'D:\yuzhe\exp(09.09.20)\8mm\0.6-8KN(SIN)\0466.txt')
+st_pris=csv_to_array(r'D:\yuzhe\pris\0466.txt')
+
+
+strain_crack=np.concatenate((st_2mm_2KN,st_2mm_4KN,st_2mm_8KN,st_4mm,st_6mm,st_8mm),axis=0)
+label_crack=np.ones((strain_crack.shape[0],1))
+strain_pris=st_pris
+label_pris=np.zeros((strain_pris.shape[0],1))
+
