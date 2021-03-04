@@ -18,3 +18,6 @@ label_crack=np.ones((strain_crack.shape[0],1))
 strain_pris=st_pris
 label_pris=np.zeros((strain_pris.shape[0],1))
 
+np.save('./strain_crack.npy',strain_crack)
+np.save('./strain_no_crack.npy',strain_pris)
+
